@@ -173,7 +173,6 @@ class HeteroNet(nn.Module):
         self.final_project.reset_parameters()
         for bn in self.bns:
             bn.reset_parameters()
-        # todo reset zinb
 
     def init_adj(self, edge_index):
         """ cache normalized adjacency and normalized strict two-hop adjacency,

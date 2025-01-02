@@ -9,7 +9,7 @@ from utils.evaluate import evaluate_detect, eval_acc
 from utils.dataset import load_cell_graph_fixed
 from utils.parse import parser_add_main_args
 from utils.scHeteroNet import scHeteroNet
-from utils.losses import ZINBLoss
+from utils.losses import ZINBLoss, contrastive_loss
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -68,7 +68,7 @@ for run in range(args.runs):
     for epoch in range(args.epochs):
         model.train()
         optimizer.zero_grad()
-        loss, _mean, _disp, _pi, train_idx  = model.loss_compute(dataset_ind, dataset_ood_tr, criterion, device, args)
+        loss, _mean, _disp, _pi, train_idx, logit_in = model.loss_compute(dataset_ind, dataset_ood_tr, criterion, device, args)
         if args.use_zinb:
             zinb_loss = ZINBLoss().to(device)
             x_raw = adata.raw.X
@@ -77,6 +77,13 @@ for run in range(args.runs):
             x_raw =  torch.Tensor(x_raw)[train_idx].to(device)
             zinb_loss = zinb_loss(x_raw, _mean, _disp, _pi, torch.tensor(adata.obs.size_factors)[train_idx].to(device))
             loss += args.zinb_weight * zinb_loss 
+        if args.cl_weight != 0:
+                X = dataset_ind.x.to(device)
+                mask1 = (torch.rand_like(X) > args.mask_ratio).float()
+                X_view1 = X * mask1
+                z1 = model.encoder(X_view1, dataset_ind.edge_index.to(device))
+                cl_loss = contrastive_loss(logit_in, z1)
+                loss = loss + args.cl_weight * cl_loss
         loss.backward()
         optimizer.step()
         

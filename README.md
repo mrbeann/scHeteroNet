@@ -28,7 +28,17 @@ If you use your own dataset, you should firstly split the dataset into train, va
 ### 3. Running the code
 Run with 10x5cl dataset
 ```bash
-python main.py --dataset 10x5cl --rand_split --epochs 200
+python main.py --dataset 10x_5cl --epochs 200 --use_zinb --use_prop --use_2hop 
+```
+
+Run with spatial transcriptomics
+```bash
+python main.py --dataset dlpfc_151670 --epochs 200 --use_zinb --use_prop --use_2hop --spatial
+```
+
+Run with contrastive learning.
+```bash
+python main.py --dataset 10x_5cl --epochs 200 --use_zinb --use_prop --use_2hop --cl_weight 0.05
 ```
 
 ## Citation

@@ -82,4 +82,4 @@ class scHeteroNet(nn.Module):
         sup_loss = criterion(pred_in, dataset_ind.y[train_in_idx].squeeze(1).to(device))    
         loss = sup_loss
 
-        return loss, _mean, _disp, _pi, train_in_idx
+        return loss, _mean, _disp, _pi, train_in_idx, logits_in

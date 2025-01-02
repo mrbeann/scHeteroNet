@@ -1,11 +1,12 @@
-# Currently used model
 import torch
 import scanpy as sc
 import numpy as np
+import pandas as pd
 import anndata 
 from sklearn import preprocessing
-from sklearn.neighbors import kneighbors_graph
+from sklearn.neighbors import kneighbors_graph, NearestNeighbors
 from torch_geometric.data import Data
+import time
 
 
 dataset_prefix = '_processed'
@@ -51,10 +52,33 @@ class NCDataset(object):
     def __repr__(self):
         return '{}({})'.format(self.__class__.__name__, len(self))
 
+def build_graph(adata, radius=None, knears=None, distance_metrics='l2', use_repo='spatial'):
+    """
+    based on https://github.com/hannshu/st_datasets/blob/master/utils/preprocess.py
+    """
+    if (isinstance(adata, np.ndarray)):
+        coor = pd.DataFrame(adata)
+    elif ('X' == use_repo):
+        coor = pd.DataFrame(adata.X.todense())
+    else:
+        coor = pd.DataFrame(adata.obsm[use_repo])
+        coor.index = adata.obs.index
+        coor.columns = ['row', 'col']
+
+    if (radius):
+        nbrs = NearestNeighbors(radius=radius, metric=distance_metrics).fit(coor)
+        _, indices = nbrs.radius_neighbors(coor, return_distance=True)
+    else:
+        nbrs = NearestNeighbors(n_neighbors=knears+1, metric=distance_metrics).fit(coor)
+        _, indices = nbrs.kneighbors(coor)
+
+    edge_list = np.array([[i, j] for i, sublist in enumerate(indices) for j in sublist])
+    return edge_list
+
 
 def load_dataset_fixed(args, ignore_first=False, ood=False):
     dataset = NCDataset(args.dataset)
-    ref_adata = anndata.read_h5ad(f'./data/processed_datasets/{args.dataset}{dataset_prefix}.h5ad')
+    ref_adata = anndata.read_h5ad(f'../data/processed_datasets/{args.dataset}{dataset_prefix}.h5ad')
     # encoding label to id
     le = preprocessing.LabelEncoder()
     y = ref_adata.obs['cell'].copy()
@@ -71,8 +95,12 @@ def load_dataset_fixed(args, ignore_first=False, ood=False):
                      'num_nodes': num_nodes}
     dataset.num_nodes = len(labels)
     dataset.label = torch.LongTensor(labels)
-    adj_knn = kneighbors_graph(dataset.graph['node_feat'], n_neighbors=args.knn_num, include_self=True)
-    edge_index = torch.tensor(adj_knn.nonzero(), dtype=torch.long)
+    if args.spatial:
+        adj_knn = kneighbors_graph(dataset.graph['node_feat'], n_neighbors=args.knn_num, include_self=True)
+        edge_index = torch.tensor(adj_knn.nonzero(), dtype=torch.long)
+    else:
+        edge_index = edge_index = build_graph(ref_adata, knears=args.knn_num)
+        edge_index = torch.tensor(edge_index.T, dtype=torch.long)
     dataset.edge_index = dataset.graph['edge_index']=edge_index
     dataset.x = features
     # if ignore some class.  not fully match
