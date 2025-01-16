@@ -1,0 +1,9 @@
+# Baseline
+- [scGCC](https://github.com/Teichlab/celltypist)
+- [ACTINN](https://github.com/mafeiyang/ACTINN)
+- [scANVI](https://github.com/scverse/scvi-tools)
+- [scmap](https://github.com/hemberg-lab/scmap)
+- [scGraphformer](https://github.com/xyfan22/scGraphformer)
+- [scBalance](https://github.com/yuqcheng/scBalance)
+- [scGCC](https://github.com/tswstart/scGCC)
+- [scSimGCL](https://github.com/zhangzh1328/scSimGCL)

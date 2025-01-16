@@ -18,11 +18,9 @@ pip install -r requirements.txt
 ```
 
 ### 2. Download the dataset
-You can use your own dataset in h5ad format. Or you can download the dataset from figureshare. The data should be placed in `./data/processed_datasets`
-
+You can use your own dataset in h5ad format. Or you can download the dataset from [Zenodo](https://zenodo.org/records/14633897). The data should be placed in `./data/processed_datasets`
 
 If you use your own dataset, you should firstly split the dataset into train, valid and test set. You can use the `split.py` to split the dataset.
-
 
 
 ### 3. Running the code
